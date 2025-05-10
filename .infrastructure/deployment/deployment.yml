@@ -23,12 +23,6 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /app/data
-        - name: app-secrets-volume
-          mountPath: "/app/secrets"
-          readOnly: true
-        - name: app-config-volume
-          mountPath: "/app/configs"
-          readOnly: true
         resources:
           requests:
             memory: "256Mi"
@@ -42,22 +36,37 @@ spec:
             configMapKeyRef:
               name: app-config
               key: PYTHONUNBUFFERED
-        - name: SECRET_KEY
+        - name: DB_NAME
           valueFrom:
             secretKeyRef:
               name: app-secret
-              key: SECRET_KEY
+              key: NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: PASSWORD
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: HOST
         ports:
         - containerPort: 8080
         livenessProbe:
           httpGet:
-            path: api/health
+            path: /api/health
             port: 8080
           initialDelaySeconds: 60
           periodSeconds: 5
         readinessProbe:
           httpGet:
-            path: api/ready
+            path: /api/ready
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 5
@@ -65,9 +74,3 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: pvc-data
-      - name: app-secrets-volume
-        secret:
-          secretName: app-secret
-      - name: app-config-volume
-        configMap:
-          name: app-config
